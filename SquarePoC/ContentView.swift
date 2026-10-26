@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// Root view: three tabs and a mini player.
+/// Root view: four tabs and a mini player.
 ///
 /// Phase 1 turns the Player and Library tabs into the real local
 /// audio player. The Home tab keeps the Phase 0 visual shelves as a
 /// design reference only; its cards are invented artwork and do not
-/// play anything. No Spotify, YouTube or other third party content is
-/// used anywhere in the app.
+/// play anything. The YouTube tab searches the official YouTube Data
+/// API and plays results inside YouTube's official embedded player.
+/// No Spotify content is used anywhere in the app.
 struct ContentView: View {
     @StateObject private var player = AudioPlayer()
     @State private var selectedTab = 0
@@ -24,6 +25,10 @@ struct ContentView: View {
             LibraryView(player: player)
                 .tabItem { Label("Library", systemImage: "music.note.list") }
                 .tag(2)
+
+            YouTubeSearchView()
+                .tabItem { Label("YouTube", systemImage: "play.rectangle.fill") }
+                .tag(3)
         }
         .safeAreaInset(edge: .bottom) {
             if player.hasLoadedTrack {
