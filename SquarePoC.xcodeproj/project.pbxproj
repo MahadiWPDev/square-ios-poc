@@ -12,6 +12,11 @@
 		00000000000000000000000A /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000005 /* PlayerView.swift */; };
 		00000000000000000000000B /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000006 /* SampleData.swift */; };
 		000000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000002 /* Assets.xcassets */; };
+		A10000000000000000000002 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* AudioPlayer.swift */; };
+		A10000000000000000000004 /* RustBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* RustBridge.swift */; };
+		A10000000000000000000006 /* SquareCorePOC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SquareCorePOC.xcframework */; };
+		A10000000000000000000007 /* SquareCorePOC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SquareCorePOC.xcframework */; };
+		A1000000000000000000000B /* SquarePoCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* SquarePoCTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,23 +26,60 @@
 		000000000000000000000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		000000000000000000000005 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		000000000000000000000006 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		A10000000000000000000001 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* RustBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustBridge.swift; sourceTree = "<group>"; };
+		A10000000000000000000005 /* SquareCorePOC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SquarePoC/Frameworks/SquareCorePOC.xcframework; sourceTree = "<group>"; };
+		A10000000000000000000008 /* SquarePoCTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SquarePoCTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000000000000000000000A /* SquarePoCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquarePoCTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXContainerItemProxy section */
+		A10000000000000000000014 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000010 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00000000000000000000000F;
+			remoteInfo = SquarePoC;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		A10000000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00000000000000000000000F /* SquarePoC */;
+			targetProxy = A10000000000000000000014 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000000000012 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000006 /* SquareCorePOC.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section (tests) */
+		A1000000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000007 /* SquareCorePOC.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section (tests) */
 
 /* Begin PBXGroup section */
 		00000000000000000000000C = {
 			isa = PBXGroup;
 			children = (
 				00000000000000000000000E /* SquarePoC */,
+				A10000000000000000000009 /* SquarePoCTests */,
+				A10000000000000000000005 /* SquareCorePOC.xcframework */,
 				00000000000000000000000D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000001 /* SquarePoC.app */,
+				A10000000000000000000008 /* SquarePoCTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -57,9 +100,19 @@
 				000000000000000000000004 /* ContentView.swift */,
 				000000000000000000000005 /* PlayerView.swift */,
 				000000000000000000000006 /* SampleData.swift */,
+				A10000000000000000000001 /* AudioPlayer.swift */,
+				A10000000000000000000003 /* RustBridge.swift */,
 				000000000000000000000002 /* Assets.xcassets */,
 			);
 			path = SquarePoC;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000009 /* SquarePoCTests */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000000A /* SquarePoCTests.swift */,
+			);
+			path = SquarePoCTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -82,6 +135,24 @@
 			productReference = 000000000000000000000001 /* SquarePoC.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A1000000000000000000000C /* SquarePoCTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000010 /* Build configuration list for PBXNativeTarget "SquarePoCTests" */;
+			buildPhases = (
+				A1000000000000000000000D /* Sources */,
+				A1000000000000000000000E /* Frameworks */,
+				A1000000000000000000000F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A10000000000000000000013 /* PBXTargetDependency */,
+			);
+			name = SquarePoCTests;
+			productName = SquarePoCTests;
+			productReference = A10000000000000000000008 /* SquarePoCTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -95,6 +166,11 @@
 					00000000000000000000000F = {
 						CreatedOnToolsVersion = 15.0;
 						LastSwiftMigration = 1500;
+					};
+					A1000000000000000000000C = {
+						CreatedOnToolsVersion = 15.0;
+						LastSwiftMigration = 1500;
+						TestTargetID = 00000000000000000000000F;
 					};
 				};
 			};
@@ -112,6 +188,7 @@
 			projectRoot = "";
 			targets = (
 				00000000000000000000000F /* SquarePoC */,
+				A1000000000000000000000C /* SquarePoCTests */,
 			);
 		};
 /* End PBXProject section */
@@ -127,6 +204,16 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXResourcesBuildPhase section (tests) */
+		A1000000000000000000000F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section (tests) */
+
 /* Begin PBXSourcesBuildPhase section */
 		000000000000000000000011 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -136,10 +223,23 @@
 				000000000000000000000009 /* ContentView.swift in Sources */,
 				00000000000000000000000A /* PlayerView.swift in Sources */,
 				00000000000000000000000B /* SampleData.swift in Sources */,
+				A10000000000000000000002 /* AudioPlayer.swift in Sources */,
+				A10000000000000000000004 /* RustBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section (tests) */
+		A1000000000000000000000D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000000B /* SquarePoCTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section (tests) */
 
 /* Begin XCBuildConfiguration section */
 		000000000000000000000016 /* Debug */ = {
@@ -204,6 +304,11 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/SquarePoC/Frameworks",
+				);
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_CFBundleDisplayName = "Square PoC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -234,6 +339,11 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/SquarePoC/Frameworks",
+				);
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_CFBundleDisplayName = "Square PoC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -254,6 +364,56 @@
 			};
 			name = Release;
 		};
+		A10000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/SquarePoC/Frameworks",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				CURRENT_PROJECT_VERSION = 1;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.mahadi.squarepoc.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquarePoC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SquarePoC";
+			};
+			name = Debug;
+		};
+		A10000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/SquarePoC/Frameworks",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				CURRENT_PROJECT_VERSION = 1;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.mahadi.squarepoc.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SquarePoC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SquarePoC";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -271,6 +431,15 @@
 			buildConfigurations = (
 				000000000000000000000018 /* Debug */,
 				000000000000000000000019 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000010 /* Build configuration list for PBXNativeTarget "SquarePoCTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000011 /* Debug */,
+				A10000000000000000000012 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
