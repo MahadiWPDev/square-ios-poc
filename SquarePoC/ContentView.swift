@@ -1,44 +1,46 @@
 import SwiftUI
 
-/// Root view: three tabs and a mini player, in the spirit of Square's
-/// floating glass tab bar. The glass look uses Apple's own materials
-/// and, on iOS 26, the system Liquid Glass effect. No artwork, icon or
-/// code is copied from the Android project.
+/// Root view: three tabs and a mini player.
+///
+/// Phase 1 turns the Player and Library tabs into the real local
+/// audio player. The Home tab keeps the Phase 0 visual shelves as a
+/// design reference only; its cards are invented artwork and do not
+/// play anything. No Spotify, YouTube or other third party content is
+/// used anywhere in the app.
 struct ContentView: View {
-    @EnvironmentObject private var player: SamplePlayer
+    @StateObject private var player = AudioPlayer()
+    @State private var selectedTab = 0
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
+                .tag(0)
 
-            SearchPlaceholderView()
-                .tabItem { Label("Search", systemImage: "magnifyingglass") }
+            PlayerView(player: player)
+                .tabItem { Label("Player", systemImage: "play.circle.fill") }
+                .tag(1)
 
-            LibraryPlaceholderView()
+            LibraryView(player: player)
                 .tabItem { Label("Library", systemImage: "music.note.list") }
+                .tag(2)
         }
         .safeAreaInset(edge: .bottom) {
-            if player.current != nil {
-                MiniPlayerView()
+            if player.hasLoadedTrack {
+                MiniPlayerView(player: player) { selectedTab = 1 }
                     .padding(.horizontal, 12)
                     .padding(.bottom, 4)
             }
-        }
-        .sheet(isPresented: $player.showPlayer) {
-            PlayerView()
         }
     }
 }
 
 private struct HomeView: View {
-    @EnvironmentObject private var player: SamplePlayer
-
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
-                    Text("Phase 0 prototype. Sample tracks only, nothing is streamed.")
+                    Text("Phase 1 prototype. The Player tab plays your own audio files for real. These shelves are design references only and their cards do not play.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
@@ -50,7 +52,6 @@ private struct HomeView: View {
                                 HStack(spacing: 14) {
                                     ForEach(shelf.tracks) { track in
                                         TrackCard(track: track)
-                                            .onTapGesture { player.play(track) }
                                     }
                                 }
                             }
@@ -94,65 +95,39 @@ private struct TrackCard: View {
     }
 }
 
-private struct MiniPlayerView: View {
-    @EnvironmentObject private var player: SamplePlayer
+private struct LibraryView: View {
+    @ObservedObject var player: AudioPlayer
 
-    var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(LinearGradient(colors: player.current?.colors ?? [.gray],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
-                .frame(width: 44, height: 44)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(player.current?.title ?? "Nothing playing")
-                    .font(.subheadline.bold())
-                    .lineLimit(1)
-                Text(player.current?.artist ?? "")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-            Button {
-                player.toggle()
-            } label: {
-                Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(10)
-        .glassPanel()
-        .contentShape(Rectangle())
-        .onTapGesture { player.showPlayer = true }
-    }
-}
-
-private struct SearchPlaceholderView: View {
     var body: some View {
         NavigationStack {
-            ContentUnavailableView("Search is not part of Phase 0",
-                                   systemImage: "magnifyingglass",
-                                   description: Text("Catalogue search arrives only with an approved later phase."))
-                .navigationTitle("Search")
-        }
-    }
-}
-
-private struct LibraryPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            List(SampleLibrary.tracks) { track in
-                HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(LinearGradient(colors: track.colors, startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 40, height: 40)
-                    VStack(alignment: .leading) {
-                        Text(track.title)
-                        Text(track.artist)
-                            .font(.caption)
+            List {
+                Section("Your files") {
+                    if player.queue.isEmpty {
+                        Text("No files yet. Add audio files from the Player tab.")
                             .foregroundStyle(.secondary)
                     }
+                    ForEach(Array(player.queue.enumerated()), id: \.offset) { index, url in
+                        Button {
+                            player.load(at: index, autoplay: true)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: index == player.currentIndex ? "speaker.wave.2.fill" : "music.note")
+                                    .foregroundStyle(index == player.currentIndex ? .primary : .secondary)
+                                VStack(alignment: .leading) {
+                                    Text(url.deletingPathExtension().lastPathComponent)
+                                        .foregroundStyle(.primary)
+                                    Text(url.lastPathComponent)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+                Section("Diagnostics") {
+                    LabeledContent("Rust library", value: RustBridge.version())
+                    LabeledContent("Audio engine", value: "AVAudioPlayer")
+                    LabeledContent("Background mode", value: "Audio")
                 }
             }
             .navigationTitle("Library")
