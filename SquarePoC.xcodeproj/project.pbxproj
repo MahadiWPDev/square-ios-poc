@@ -17,6 +17,11 @@
 		A10000000000000000000006 /* SquareCorePOC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SquareCorePOC.xcframework */; };
 		A10000000000000000000007 /* SquareCorePOC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SquareCorePOC.xcframework */; };
 		A1000000000000000000000B /* SquarePoCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* SquarePoCTests.swift */; };
+		A10000000000000000000018 /* YouTubeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* YouTubeModels.swift */; };
+		A1000000000000000000001A /* YouTubeSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* YouTubeSearchService.swift */; };
+		A1000000000000000000001C /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* YouTubePlayerView.swift */; };
+		A1000000000000000000001E /* YouTubeSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* YouTubeSearchView.swift */; };
+		A10000000000000000000020 /* YouTubeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* YouTubeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +37,11 @@
 		A10000000000000000000008 /* SquarePoCTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SquarePoCTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000000000000000000000A /* SquarePoCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquarePoCTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000017 /* YouTubeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeModels.swift; sourceTree = "<group>"; };
+		A10000000000000000000019 /* YouTubeSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchService.swift; sourceTree = "<group>"; };
+		A1000000000000000000001B /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* YouTubeSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchView.swift; sourceTree = "<group>"; };
+		A1000000000000000000001F /* YouTubeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +113,7 @@
 				000000000000000000000006 /* SampleData.swift */,
 				A10000000000000000000001 /* AudioPlayer.swift */,
 				A10000000000000000000003 /* RustBridge.swift */,
+				A10000000000000000000016 /* YouTube */,
 				000000000000000000000002 /* Assets.xcassets */,
 				A10000000000000000000015 /* Info.plist */,
 			);
@@ -113,8 +124,20 @@
 			isa = PBXGroup;
 			children = (
 				A1000000000000000000000A /* SquarePoCTests.swift */,
+				A1000000000000000000001F /* YouTubeTests.swift */,
 			);
 			path = SquarePoCTests;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000016 /* YouTube */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000017 /* YouTubeModels.swift */,
+				A10000000000000000000019 /* YouTubeSearchService.swift */,
+				A1000000000000000000001B /* YouTubePlayerView.swift */,
+				A1000000000000000000001D /* YouTubeSearchView.swift */,
+			);
+			path = YouTube;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -227,6 +250,10 @@
 				00000000000000000000000B /* SampleData.swift in Sources */,
 				A10000000000000000000002 /* AudioPlayer.swift in Sources */,
 				A10000000000000000000004 /* RustBridge.swift in Sources */,
+				A10000000000000000000018 /* YouTubeModels.swift in Sources */,
+				A1000000000000000000001A /* YouTubeSearchService.swift in Sources */,
+				A1000000000000000000001C /* YouTubePlayerView.swift in Sources */,
+				A1000000000000000000001E /* YouTubeSearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,6 +265,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000000000000000000000B /* SquarePoCTests.swift in Sources */,
+				A10000000000000000000020 /* YouTubeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
