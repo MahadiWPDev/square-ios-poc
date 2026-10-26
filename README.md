@@ -10,6 +10,32 @@ This repository is separate from the original project. The original
 Android code is not modified and none of it is copied here. See
 [NOTICE.md](NOTICE.md) for attributions and licence details.
 
+## Phase 1: a real local audio player
+
+Phase 1 (in progress on top of the verified Phase 0) replaces the
+fake timer player with genuine local playback:
+
+- AVAudioPlayer based playback of audio files the user picks with
+  the system document picker: real play, pause, resume, seek, queue
+  with next and previous, real progress, duration and error handling.
+- An app generated test tone (a synthesized 440 Hz WAV) as legally
+  safe test audio.
+- Background playback preparation: the playback audio session
+  category, the audio background mode, Now Playing metadata and
+  lock screen remote commands.
+- The Rust loudness library from Phase 0 is now linked into the app
+  as SquareCorePOC.xcframework and called from Swift through its C
+  ABI to measure the loudness of the loaded file.
+- Automated XCTest coverage for playback state, seeking, track
+  switching, error handling and the Rust link, run in the simulator
+  on every build.
+
+See [docs/FEATURE-MATRIX.md](docs/FEATURE-MATRIX.md) for what is
+reusable, what is native and what is blocked, and
+[docs/SERVICE-INTEGRATIONS.md](docs/SERVICE-INTEGRATIONS.md) for why
+Spotify and YouTube Music playback cannot be added through any
+official API.
+
 ## What Phase 0 proves
 
 1. A minimal SwiftUI app with a glass tab bar, home shelves, a mini
