@@ -1,0 +1,17 @@
+[package]
+name = "square-core-poc"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Phase 0 proof of concept: a small, legally distributable slice of the audio analysis stack used by Square, compiled for iOS targets."
+
+[lib]
+name = "square_core_poc"
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+# The same loudness measurement library Square uses for local files
+# (MIT licensed, credited in Square's README). Used here to measure the
+# integrated loudness of a PCM buffer, exactly the job it does in
+# Square, behind a tiny C ABI that Swift can call later.
+ebur128 = "0.1"
