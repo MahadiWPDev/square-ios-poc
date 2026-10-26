@@ -25,6 +25,15 @@ name: iOS PoC CI
 # all logs and the screenshot. Only this job touches the release,
 # so the two jobs cannot race on the same tag.
 #
+# build-device is a third, independent validation job (also needs
+# rust-ios only): it builds the app and the test target for a
+# GENERIC iOS DEVICE destination with signing fully disabled, and
+# checks the produced device app (arm64 binary, UIBackgroundModes).
+# It proves the project compiles and links for a real iPhone, but
+# its output is UNSIGNED and NOT installable: installing on a
+# physical iPhone happens in Xcode on a Mac with the owner's own
+# Apple Account (Personal Team free provisioning).
+#
 # Nothing here signs with a real identity, nothing is uploaded to
 # TestFlight or the App Store, and no paid runner or service is used.
 
@@ -272,3 +281,85 @@ jobs:
             rust-artifacts/rust-poc-ios.log
             rust-artifacts/rust-poc-test.log
             rust-artifacts/upstream-native-ios-check.log
+
+  build-device:
+    name: Unsigned generic device build (validation only)
+    needs: rust-ios
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Download the Rust artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: squarepoc-phase0-rust
+          path: rust-artifacts
+
+      - name: Extract the XCFramework into the location the Xcode project expects
+        run: |
+          set -e
+          test -f rust-artifacts/SquareCorePOC.xcframework.zip
+          mkdir -p SquarePoC/Frameworks
+          rm -rf SquarePoC/Frameworks/SquareCorePOC.xcframework
+          unzip -o rust-artifacts/SquareCorePOC.xcframework.zip -d SquarePoC/Frameworks
+          FW="SquarePoC/Frameworks/SquareCorePOC.xcframework"
+          test -d "$FW/ios-arm64"
+          test -f "$FW/ios-arm64/libsquare_core_poc.a"
+          test -f "$FW/ios-arm64/Headers/module.modulemap"
+          echo "Device slice present: ios-arm64"
+
+      - name: Build the app for a generic iOS device (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SquarePoC.xcodeproj \
+            -scheme SquarePoC \
+            -configuration Debug \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build/DeviceDerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            2>&1 | tee device-build.log
+          echo "## Unsigned device build result" >> "$GITHUB_STEP_SUMMARY"
+          echo "xcodebuild generic device build exit status: ${PIPESTATUS[0]}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the test target for a generic iOS device (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project SquarePoC.xcodeproj \
+            -scheme SquarePoC \
+            -configuration Debug \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build/DeviceDerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            2>&1 | tee device-test-build.log
+
+      - name: Verify the device app (arm64 binary and background audio mode)
+        run: |
+          set -e
+          APP="build/DeviceDerivedData/Build/Products/Debug-iphoneos/SquarePoC.app"
+          test -d "$APP"
+          file "$APP/SquarePoC"
+          file "$APP/SquarePoC" | grep -q "arm64"
+          python3 - "$APP/Info.plist" <<'PY'
+          import plistlib, sys
+          d = plistlib.load(open(sys.argv[1], 'rb'))
+          modes = d.get('UIBackgroundModes')
+          assert modes and 'audio' in modes, f"UIBackgroundModes wrong: {modes}"
+          print("Device app Info.plist UIBackgroundModes:", modes)
+          PY
+          test -d "build/DeviceDerivedData/Build/Products/Debug-iphoneos/SquarePoC.app/PlugIns/SquarePoCTests.xctest" || find build/DeviceDerivedData -name "SquarePoCTests.xctest" -maxdepth 6 | head -3
+          ditto -c -k --keepParent "$APP" "$GITHUB_WORKSPACE/SquarePoC-device-unsigned-app.zip"
+          ls -lh SquarePoC-device-unsigned-app.zip device-build.log device-test-build.log
+
+      - name: Upload the unsigned device build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: squarepoc-device-unsigned
+          path: |
+            SquarePoC-device-unsigned-app.zip
+            device-build.log
+            device-test-build.log
+          retention-days: 30
