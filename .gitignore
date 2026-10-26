@@ -1,0 +1,7 @@
+build/
+DerivedData/
+*.xcframework
+rust-poc/target/
+upstream-native-ios-check-local.log
+.DS_Store
+xcuserdata/
