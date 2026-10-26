@@ -69,3 +69,61 @@ Decide between Route 1 with a rented or borrowed Mac for a first
 hands-on test (0 cost, 7 day limit), or Route 2 when the prototype is
 worth 99 USD per year. That decision, and any payment, is yours
 alone.
+
+## Route 1 step by step for this project (friend's Mac, Personal Team)
+
+Verified against this repository. The CI device validation job
+proves the project compiles and links for a generic iOS device with
+signing disabled; the steps below add your own free signing on the
+Mac and install the app on your iPhone.
+
+What you need: the Mac with the current Xcode from the App Store
+(free), your iPhone and its cable, your own Apple Account. You type
+your Apple Account password only into Xcode on that Mac yourself.
+Never send it to anyone, and nothing signing related is stored in
+this repository.
+
+1. On the Mac, download this repository: open the repository page on
+   GitHub, Code, Download ZIP, and unzip it.
+2. The Rust framework is not stored in git. Download
+   `SquareCorePOC.xcframework.zip` from the newest `poc-build` release
+   on the repository's Releases page, unzip it, and put the resulting
+   `SquareCorePOC.xcframework` folder at
+   `SquarePoC/Frameworks/SquareCorePOC.xcframework` inside the
+   unzipped project (create the `Frameworks` folder if needed).
+3. Open `SquarePoC.xcodeproj` in Xcode.
+4. Xcode menu, Settings, Accounts, plus button: sign in with your
+   own Apple Account. This creates your free Personal Team.
+5. In the project navigator select the project, then the SquarePoC
+   target, Signing and Capabilities tab: tick "Automatically manage
+   signing" and set Team to your name (Personal Team). Repeat the
+   same for the SquarePoCTests target.
+6. Connect the iPhone by cable, unlock it, and tap Trust on the
+   phone if asked. On the iPhone, enable Developer Mode: Settings,
+   Privacy and Security, Developer Mode, on, then restart the phone
+   and confirm.
+7. In Xcode's top bar, choose your iPhone as the run destination and
+   press Run (the play button). Xcode builds, signs with your
+   Personal Team, installs, and launches the app.
+8. If the first launch is blocked, on the iPhone go to Settings,
+   General, VPN and Device Management, open the developer app entry
+   for your Apple Account, and tap Trust. Then open Square PoC.
+9. To test background audio for real: in the Player tab use "Play
+   generated test tone" or open one of your own audio files, press
+   play, then lock the phone. The tone should keep playing and the
+   lock screen should show the player controls.
+
+Limits and troubleshooting:
+
+- The free install stops launching after 7 days. Connect the phone
+  to the same Mac and press Run in Xcode again to renew it.
+- At most 3 free provisioned apps can be installed at once, and a
+  Personal Team can register only a small number of app IDs per
+  week.
+- If Xcode says the bundle identifier `dev.mahadi.squarepoc` is not
+  available, change the app target's Bundle Identifier to something
+  unique such as `dev.mahadi.squarepoc.phone` and the test target's
+  to the same prefix plus `.tests`, then Run again.
+- If the phone's iOS version is newer than the Xcode on the Mac
+  supports, update Xcode first; a device build requires a matching
+  or newer Xcode.
