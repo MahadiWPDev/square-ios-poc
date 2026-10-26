@@ -40,43 +40,7 @@ enum SampleLibrary {
     ]
 }
 
-/// A tiny fake player. It moves a progress value with a timer so the
-/// player interface can be checked in the simulator. It plays no audio.
-@MainActor
-final class SamplePlayer: ObservableObject {
-    @Published var current: SampleTrack? = SampleLibrary.tracks.first
-    @Published var isPlaying = false
-    @Published var progress: Double = 0.25
-    @Published var showPlayer = false
-
-    private var timer: Timer?
-
-    func toggle() {
-        guard current != nil else { return }
-        isPlaying.toggle()
-        timer?.invalidate()
-        guard isPlaying else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, let track = self.current else { return }
-                self.progress += 0.25 / track.durationSeconds
-                if self.progress >= 1 {
-                    self.progress = 0
-                    self.isPlaying = false
-                    self.timer?.invalidate()
-                }
-            }
-        }
-    }
-
-    func play(_ track: SampleTrack) {
-        current = track
-        progress = 0
-        isPlaying = false
-        toggle()
-    }
-
-    func seek(to value: Double) {
-        progress = min(max(value, 0), 1)
-    }
-}
+/// Phase 1 note: the fake timer based SamplePlayer from Phase 0 was
+/// removed. Playback is now handled by the real AudioPlayer in
+/// AudioPlayer.swift, and these sample cards remain as visual design
+/// references on the Home tab only.
