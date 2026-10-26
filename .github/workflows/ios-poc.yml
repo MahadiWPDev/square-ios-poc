@@ -1,0 +1,190 @@
+name: iOS Phase 0 PoC
+
+# Phase 0 proof of concept pipeline.
+# Job 1 builds the SwiftUI prototype on a real macOS runner, installs it
+# in an iOS simulator, launches it and takes a screenshot.
+# Job 2 investigates the Rust side: it builds the small square-core-poc
+# crate for iOS targets, packages an XCFramework, and tries (as a
+# recorded experiment, not a gate) to typecheck the original project's
+# Rust core for aarch64-apple-ios.
+# Nothing here signs with a real identity and nothing is uploaded to
+# TestFlight or the App Store.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-app:
+    name: Build and run the SwiftUI prototype in a simulator
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Show the toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+          ls /Applications | grep -i xcode || true
+
+      - name: Pick an available iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices available --json | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for runtime, devices in data['devices'].items():
+              if 'iOS' not in runtime:
+                  continue
+              for d in devices:
+                  if d.get('isAvailable') and 'iPhone' in d['name']:
+                      print(d['udid'])
+                      sys.exit(0)
+          sys.exit(1)
+          ")
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          echo "Selected simulator: $UDID"
+          xcrun simctl list devices available | grep -A2 -i iphone | head -20
+
+      - name: Build the app for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SquarePoC.xcodeproj \
+            -scheme SquarePoC \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build-app.log
+          echo "## App build result" >> "$GITHUB_STEP_SUMMARY"
+          echo "xcodebuild exit status: ${PIPESTATUS[0]}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install, launch and screenshot in the simulator
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Debug-iphonesimulator/SquarePoC.app"
+          test -d "$APP_PATH"
+          xcrun simctl boot "$SIM_UDID" || true
+          xcrun simctl bootstatus "$SIM_UDID" -b
+          xcrun simctl install "$SIM_UDID" "$APP_PATH"
+          xcrun simctl launch "$SIM_UDID" dev.mahadi.squarepoc
+          sleep 4
+          xcrun simctl io "$SIM_UDID" screenshot simulator-screenshot.png
+          xcrun simctl terminate "$SIM_UDID" dev.mahadi.squarepoc || true
+          echo "Simulator install and launch completed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Package the simulator app
+        run: |
+          cd build/DerivedData/Build/Products/Debug-iphonesimulator
+          ditto -c -k --keepParent SquarePoC.app "$GITHUB_WORKSPACE/SquarePoC-simulator-app.zip"
+          cd "$GITHUB_WORKSPACE"
+          ls -lh SquarePoC-simulator-app.zip simulator-screenshot.png build-app.log
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: squarepoc-phase0-app
+          path: |
+            SquarePoC-simulator-app.zip
+            simulator-screenshot.png
+            build-app.log
+          retention-days: 30
+
+      - name: Publish a pre-release with the same files for direct download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: poc-build-${{ github.run_number }}
+          name: Phase 0 PoC build ${{ github.run_number }}
+          prerelease: true
+          body: |
+            Automated Phase 0 proof of concept build from GitHub Actions on a macOS runner.
+            Contains the unsigned iOS Simulator build of SquarePoC, the full xcodebuild log and a simulator screenshot.
+            A simulator build cannot be installed on a physical iPhone. See docs/INSTALL-ON-IPHONE.md in the repository.
+          files: |
+            SquarePoC-simulator-app.zip
+            simulator-screenshot.png
+            build-app.log
+
+  rust-ios:
+    name: Rust iOS investigation
+    runs-on: macos-26
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Check out the original Square repository at the audited commit
+        uses: actions/checkout@v4
+        with:
+          repository: Lelonio/Square
+          ref: a64b9ee053bdba03398b2f31d65bccc976046612
+          path: upstream-square
+
+      - name: Install the Rust toolchain with iOS targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Build the square-core-poc crate for iOS and run its tests
+        run: |
+          set -o pipefail
+          cd rust-poc
+          cargo test 2>&1 | tee ../rust-poc-test.log
+          cargo build --release --target aarch64-apple-ios 2>&1 | tee ../rust-poc-ios.log
+          cargo build --release --target aarch64-apple-ios-sim 2>&1 | tee -a ../rust-poc-ios.log
+          ls -lh target/aarch64-apple-ios/release/libsquare_core_poc.a target/aarch64-apple-ios-sim/release/libsquare_core_poc.a
+          cd ..
+
+      - name: Package the poc libraries as an XCFramework
+        run: |
+          xcodebuild -create-xcframework \
+            -library rust-poc/target/aarch64-apple-ios/release/libsquare_core_poc.a \
+            -headers rust-poc/include \
+            -library rust-poc/target/aarch64-apple-ios-sim/release/libsquare_core_poc.a \
+            -headers rust-poc/include \
+            -output SquareCorePOC.xcframework
+          ditto -c -k --keepParent SquareCorePOC.xcframework SquareCorePOC.xcframework.zip
+          ls -lh SquareCorePOC.xcframework.zip
+
+      - name: Experiment, typecheck the original Rust core for iOS (recorded, not a gate)
+        run: |
+          cd upstream-square/native
+          set +e
+          cargo check --target aarch64-apple-ios > ../../upstream-native-ios-check.log 2>&1
+          STATUS=$?
+          set -e
+          echo "upstream cargo check exit status: $STATUS" | tee -a ../../upstream-native-ios-check.log
+          echo "## Upstream Rust core cargo check for aarch64-apple-ios" >> "$GITHUB_STEP_SUMMARY"
+          echo "Exit status: $STATUS (full log is in the rust artifacts)" >> "$GITHUB_STEP_SUMMARY"
+          tail -30 ../../upstream-native-ios-check.log
+
+      - name: Upload Rust artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: squarepoc-phase0-rust
+          path: |
+            rust-poc-test.log
+            rust-poc-ios.log
+            upstream-native-ios-check.log
+            SquareCorePOC.xcframework.zip
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Attach the XCFramework and logs to the same pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: poc-build-${{ github.run_number }}
+          files: |
+            SquareCorePOC.xcframework.zip
+            rust-poc-ios.log
+            upstream-native-ios-check.log
