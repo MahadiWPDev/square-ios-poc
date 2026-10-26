@@ -31,6 +31,7 @@
 		A10000000000000000000005 /* SquareCorePOC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SquarePoC/Frameworks/SquareCorePOC.xcframework; sourceTree = "<group>"; };
 		A10000000000000000000008 /* SquarePoCTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SquarePoCTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000000000000000000000A /* SquarePoCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquarePoCTests.swift; sourceTree = "<group>"; };
+		A10000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +104,7 @@
 				A10000000000000000000001 /* AudioPlayer.swift */,
 				A10000000000000000000003 /* RustBridge.swift */,
 				000000000000000000000002 /* Assets.xcassets */,
+				A10000000000000000000015 /* Info.plist */,
 			);
 			path = SquarePoC;
 			sourceTree = "<group>";
@@ -308,7 +310,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SquarePoC/Frameworks",
 				);
-				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_FILE = SquarePoC/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Square PoC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -343,7 +345,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SquarePoC/Frameworks",
 				);
-				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_FILE = SquarePoC/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Square PoC";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
