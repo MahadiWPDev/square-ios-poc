@@ -209,6 +209,39 @@ final class YouTubeTests: XCTestCase {
         XCTAssertEqual(controller.state, .idle)
     }
 
+    // MARK: Lyrics (LRCLIB, LRC format)
+
+    func testLRCParserReadsStampsAndSortsLines() {
+        let lrc = """
+        [ar:Some Artist]
+        [00:12.50]Second line
+        [00:05.00]First line
+        [00:20.00][00:30.00]Repeated line
+        """
+        let lines = LRCParser.parse(lrc)
+        XCTAssertEqual(lines.count, 4)
+        XCTAssertEqual(lines[0], LyricLine(time: 5.0, text: "First line"))
+        XCTAssertEqual(lines[1], LyricLine(time: 12.5, text: "Second line"))
+        XCTAssertEqual(lines[2].text, "Repeated line")
+        XCTAssertEqual(lines[3].time, 30.0)
+    }
+
+    func testLRCCurrentLineFollowsPlaybackTime() {
+        let lines = LRCParser.parse("[00:05.00]A\n[00:10.00]B\n[00:15.00]C")
+        XCTAssertNil(LRCParser.currentLineIndex(in: lines, at: 2))
+        XCTAssertEqual(LRCParser.currentLineIndex(in: lines, at: 5), 0)
+        XCTAssertEqual(LRCParser.currentLineIndex(in: lines, at: 12), 1)
+        XCTAssertEqual(LRCParser.currentLineIndex(in: lines, at: 99), 2)
+        XCTAssertNil(LRCParser.currentLineIndex(in: [], at: 10))
+    }
+
+    func testLyricsLookupCleanupOfTitlesAndArtists() {
+        XCTAssertEqual(LyricsService.cleanTitle("My Song (Official Music Video)"), "My Song")
+        XCTAssertEqual(LyricsService.cleanTitle("My Song [Lyric Video]"), "My Song")
+        XCTAssertEqual(LyricsService.cleanArtist("Some Singer - Topic"), "Some Singer")
+        XCTAssertEqual(LyricsService.cleanArtist("Some SingerVEVO"), "Some Singer")
+    }
+
     // MARK: Embed page
 
     func testEmbedPageCarriesVideoIdAndRejectsBadIds() {
