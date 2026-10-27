@@ -14,6 +14,8 @@ struct YouTubeSearchView: View {
     @State private var apiKeyDraft = YTAPIKeyStore.key ?? ""
     @State private var hasKey = YTAPIKeyStore.hasKey
     @State private var seekDraft: Double?
+    @State private var recents: [YTTrack] = []
+    @State private var favoriteIds: Set<String> = []
     private let service = YouTubeSearchService()
 
     var body: some View {
@@ -26,7 +28,14 @@ struct YouTubeSearchView: View {
                 content
             }
             .navigationTitle("YouTube")
+            .onAppear(perform: refreshLibrary)
+            .onChange(of: controller.track?.id) { _ in refreshLibrary() }
         }
+    }
+
+    private func refreshLibrary() {
+        recents = YTLibraryStore.recents()
+        favoriteIds = Set(YTLibraryStore.favorites().map(\.id))
     }
 
     // MARK: Player
@@ -46,12 +55,37 @@ struct YouTubeSearchView: View {
 
             HStack(spacing: 14) {
                 Button {
+                    controller.previous()
+                } label: {
+                    Image(systemName: "backward.fill")
+                }
+                .disabled(!controller.canPrevious)
+
+                Button {
                     controller.togglePlayPause()
                 } label: {
                     Image(systemName: controller.state == .playing ? "pause.circle.fill" : "play.circle.fill")
                         .font(.title)
                 }
                 .disabled(controller.state == .idle || controller.state == .loading)
+
+                Button {
+                    controller.next()
+                } label: {
+                    Image(systemName: "forward.fill")
+                }
+                .disabled(!controller.canNext)
+
+                Button {
+                    if YTLibraryStore.toggleFavorite(track) {
+                        favoriteIds.insert(track.id)
+                    } else {
+                        favoriteIds.remove(track.id)
+                    }
+                } label: {
+                    Image(systemName: favoriteIds.contains(track.id) ? "heart.fill" : "heart")
+                        .foregroundStyle(favoriteIds.contains(track.id) ? .red : .primary)
+                }
 
                 Text(timeText(controller.currentTime))
                     .font(.caption.monospacedDigit())
@@ -123,10 +157,29 @@ struct YouTubeSearchView: View {
             Text("No results for that search.")
                 .foregroundStyle(.secondary)
             Spacer()
+        } else if !hasSearched && results.isEmpty && (!recents.isEmpty || !favoriteIds.isEmpty) {
+            List {
+                if !recents.isEmpty {
+                    Section("Recently played") {
+                        ForEach(recents) { track in
+                            trackRow(track, queue: recents)
+                        }
+                    }
+                }
+                let favorites = YTLibraryStore.favorites()
+                if !favorites.isEmpty {
+                    Section("Favorites") {
+                        ForEach(favorites) { track in
+                            trackRow(track, queue: favorites)
+                        }
+                    }
+                }
+            }
+            .listStyle(.plain)
         } else {
             List(results) { track in
                 Button {
-                    controller.select(track)
+                    controller.select(track, in: results)
                 } label: {
                     HStack(spacing: 12) {
                         AsyncImage(url: track.thumbnailURL) { image in
@@ -186,6 +239,45 @@ struct YouTubeSearchView: View {
             Spacer()
         }
         .padding(16)
+    }
+
+    @ViewBuilder
+    private func trackRow(_ track: YTTrack, queue: [YTTrack]) -> some View {
+        Button {
+            controller.select(track, in: queue)
+        } label: {
+            HStack(spacing: 12) {
+                AsyncImage(url: track.thumbnailURL) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Color.gray.opacity(0.25)
+                }
+                .frame(width: 64, height: 36)
+                .clipped()
+                .cornerRadius(4)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(track.title)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                    Text(track.artist)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                if !track.durationText.isEmpty {
+                    Text(track.durationText)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                if controller.track?.id == track.id {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .foregroundStyle(.tint)
+                }
+            }
+        }
     }
 
     // MARK: Actions
