@@ -21,6 +21,7 @@
 		A1000000000000000000001A /* YouTubeSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* YouTubeSearchService.swift */; };
 		A1000000000000000000001C /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* YouTubePlayerView.swift */; };
 		A1000000000000000000001E /* YouTubeSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* YouTubeSearchView.swift */; };
+		A10000000000000000000022 /* LyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* LyricsService.swift */; };
 		A10000000000000000000020 /* YouTubeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* YouTubeTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 		A10000000000000000000019 /* YouTubeSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchService.swift; sourceTree = "<group>"; };
 		A1000000000000000000001B /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
 		A1000000000000000000001D /* YouTubeSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchView.swift; sourceTree = "<group>"; };
+		A10000000000000000000021 /* LyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsService.swift; sourceTree = "<group>"; };
 		A1000000000000000000001F /* YouTubeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -136,6 +138,7 @@
 				A10000000000000000000019 /* YouTubeSearchService.swift */,
 				A1000000000000000000001B /* YouTubePlayerView.swift */,
 				A1000000000000000000001D /* YouTubeSearchView.swift */,
+				A10000000000000000000021 /* LyricsService.swift */,
 			);
 			path = YouTube;
 			sourceTree = "<group>";
@@ -254,6 +257,7 @@
 				A1000000000000000000001A /* YouTubeSearchService.swift in Sources */,
 				A1000000000000000000001C /* YouTubePlayerView.swift in Sources */,
 				A1000000000000000000001E /* YouTubeSearchView.swift in Sources */,
+				A10000000000000000000022 /* LyricsService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
