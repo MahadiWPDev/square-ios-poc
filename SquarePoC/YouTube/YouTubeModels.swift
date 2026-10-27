@@ -65,6 +65,66 @@ enum YTLibraryStore {
     }
 }
 
+/// A user-created playlist of YouTube tracks. Stored locally as
+/// JSON in UserDefaults (same pattern as YTLibraryStore). Track
+/// metadata only; no audio is ever downloaded or stored.
+struct YTPlaylist: Identifiable, Equatable, Codable {
+    var id: String
+    var name: String
+    var tracks: [YTTrack]
+}
+
+enum YTPlaylistStore {
+    private static let key = "yt_playlists"
+
+    static func all() -> [YTPlaylist] { load() }
+
+    @discardableResult
+    static func create(name: String) -> YTPlaylist {
+        let playlist = YTPlaylist(id: UUID().uuidString, name: name, tracks: [])
+        var items = load()
+        items.insert(playlist, at: 0)
+        save(items)
+        return playlist
+    }
+
+    static func delete(id: String) {
+        save(load().filter { $0.id != id })
+    }
+
+    /// Adds the track unless it is already in the playlist.
+    static func add(track: YTTrack, toPlaylist id: String) {
+        var items = load()
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        if !items[index].tracks.contains(where: { $0.id == track.id }) {
+            items[index].tracks.append(track)
+        }
+        save(items)
+    }
+
+    static func remove(trackId: String, fromPlaylist id: String) {
+        var items = load()
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        items[index].tracks.removeAll { $0.id == trackId }
+        save(items)
+    }
+
+    private static func load() -> [YTPlaylist] {
+        // Corrupt or missing stored data must never crash the app:
+        // it simply reads as an empty library.
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let items = try? JSONDecoder().decode([YTPlaylist].self, from: data)
+        else { return [] }
+        return items
+    }
+
+    private static func save(_ items: [YTPlaylist]) {
+        if let data = try? JSONEncoder().encode(items) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+}
+
 // MARK: - YouTube Data API v3 response shapes (search.list)
 
 struct YTSearchResponse: Decodable {
