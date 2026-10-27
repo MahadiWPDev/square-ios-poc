@@ -19,6 +19,9 @@ struct YouTubeSearchView: View {
     @State private var playlists: [YTPlaylist] = []
     @State private var showingNewPlaylist = false
     @State private var newPlaylistName = ""
+    @State private var showLyrics = false
+    @State private var lyricsResult: LyricsResult?
+    @State private var lyricsLoading = false
     private let service = YouTubeSearchService()
 
     var body: some View {
@@ -146,8 +149,81 @@ struct YouTubeSearchView: View {
             Text("Plays inside YouTube's official player.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+
+            Button {
+                showLyrics.toggle()
+            } label: {
+                Label(showLyrics ? "Hide lyrics" : "Show lyrics", systemImage: "text.quote")
+                    .font(.caption)
+            }
+
+            if showLyrics {
+                lyricsPanel(track: track)
+                    .task(id: track.id) { await loadLyrics(for: track) }
+            }
         }
         .padding(12)
+    }
+
+    @ViewBuilder
+    private func lyricsPanel(track: YTTrack) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if lyricsLoading {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading lyrics...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                switch lyricsResult {
+                case .synced(let lines):
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            let current = LRCParser.currentLineIndex(in: lines, at: controller.currentTime)
+                            ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                                Text(line.text.isEmpty ? " " : line.text)
+                                    .font(.caption)
+                                    .fontWeight(index == current ? .bold : .regular)
+                                    .foregroundStyle(index == current ? .primary : .secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 180)
+                case .plain(let text):
+                    ScrollView {
+                        Text(text)
+                            .font(.caption)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 180)
+                case .unavailable:
+                    Text("Lyrics are not available for this track.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                case .failed:
+                    Text("Could not load lyrics. Check the connection, then close and reopen this panel.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                case .none:
+                    EmptyView()
+                }
+            }
+            Text("Lyrics via LRCLIB. Song lyrics belong to their respective owners.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    private func loadLyrics(for track: YTTrack) async {
+        lyricsLoading = true
+        lyricsResult = nil
+        let result = await LyricsService().fetch(for: track)
+        if controller.track?.id == track.id {
+            lyricsResult = result
+            lyricsLoading = false
+        }
     }
 
     // MARK: Search
