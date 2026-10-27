@@ -162,6 +162,53 @@ final class YouTubeTests: XCTestCase {
         XCTAssertFalse(YTLibraryStore.isFavorite(track.id))
     }
 
+    // MARK: Playlists and persistence edge cases
+
+    func testPlaylistStoreCreateAddRemoveDelete() {
+        let playlist = YTPlaylistStore.create(name: "Test Mix")
+        let track = YTTrack(id: "pl-1", title: "One", artist: "A", thumbnailURL: nil, durationSeconds: 60)
+        YTPlaylistStore.add(track: track, toPlaylist: playlist.id)
+        YTPlaylistStore.add(track: track, toPlaylist: playlist.id)
+        var stored = YTPlaylistStore.all().first { $0.id == playlist.id }
+        XCTAssertEqual(stored?.tracks.count, 1, "adding the same track twice must not duplicate it")
+
+        YTPlaylistStore.remove(trackId: track.id, fromPlaylist: playlist.id)
+        stored = YTPlaylistStore.all().first { $0.id == playlist.id }
+        XCTAssertEqual(stored?.tracks.count, 0)
+
+        YTPlaylistStore.delete(id: playlist.id)
+        XCTAssertNil(YTPlaylistStore.all().first { $0.id == playlist.id })
+    }
+
+    func testStoresSurviveCorruptStoredData() {
+        UserDefaults.standard.set(Data("not json".utf8), forKey: "yt_playlists")
+        XCTAssertEqual(YTPlaylistStore.all(), [])
+        UserDefaults.standard.set(Data("not json".utf8), forKey: "yt_recents")
+        XCTAssertEqual(YTLibraryStore.recents(), [])
+        // Restore a sane state for any later test in the run.
+        YTPlaylistStore.create(name: "Recovered")
+        XCTAssertEqual(YTPlaylistStore.all().count, 1)
+    }
+
+    func testRecentsAreCappedAtTwentyNewestFirst() {
+        for i in 1...25 {
+            YTLibraryStore.recordRecent(YTTrack(id: "cap-\(i)", title: "T\(i)", artist: "A", thumbnailURL: nil, durationSeconds: 1))
+        }
+        let recents = YTLibraryStore.recents()
+        XCTAssertEqual(recents.count, 20)
+        XCTAssertEqual(recents.first?.id, "cap-25")
+        XCTAssertEqual(recents.last?.id, "cap-6")
+    }
+
+    @MainActor
+    func testQueueControlsOnEmptyQueueAreSafeNoOps() {
+        let controller = YouTubePlayerController()
+        controller.next()
+        controller.previous()
+        XCTAssertNil(controller.track)
+        XCTAssertEqual(controller.state, .idle)
+    }
+
     // MARK: Embed page
 
     func testEmbedPageCarriesVideoIdAndRejectsBadIds() {
