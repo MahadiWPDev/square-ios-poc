@@ -2,7 +2,7 @@ import Foundation
 
 /// One YouTube video as the app uses it. Built only from YouTube Data
 /// API v3 responses; there are no sample or placeholder tracks.
-struct YTTrack: Identifiable, Equatable {
+struct YTTrack: Identifiable, Equatable, Codable {
     let id: String
     let title: String
     let artist: String
@@ -12,6 +12,56 @@ struct YTTrack: Identifiable, Equatable {
     var durationText: String {
         guard let durationSeconds else { return "" }
         return "\(durationSeconds / 60):" + String(format: "%02d", durationSeconds % 60)
+    }
+}
+
+/// On-device library for the YouTube tab: recently played tracks
+/// and favorites, stored as JSON in UserDefaults. Nothing leaves
+/// the phone; no account or server is involved.
+enum YTLibraryStore {
+    private static let recentsKey = "yt_recents"
+    private static let favoritesKey = "yt_favorites"
+    private static let recentsLimit = 20
+
+    static func recents() -> [YTTrack] { load(recentsKey) }
+    static func favorites() -> [YTTrack] { load(favoritesKey) }
+
+    static func recordRecent(_ track: YTTrack) {
+        var items = load(recentsKey)
+        items.removeAll { $0.id == track.id }
+        items.insert(track, at: 0)
+        save(Array(items.prefix(recentsLimit)), key: recentsKey)
+    }
+
+    static func isFavorite(_ id: String) -> Bool {
+        load(favoritesKey).contains { $0.id == id }
+    }
+
+    /// Returns the favorite state after the toggle.
+    @discardableResult
+    static func toggleFavorite(_ track: YTTrack) -> Bool {
+        var items = load(favoritesKey)
+        if let index = items.firstIndex(where: { $0.id == track.id }) {
+            items.remove(at: index)
+            save(items, key: favoritesKey)
+            return false
+        }
+        items.insert(track, at: 0)
+        save(items, key: favoritesKey)
+        return true
+    }
+
+    private static func load(_ key: String) -> [YTTrack] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let items = try? JSONDecoder().decode([YTTrack].self, from: data)
+        else { return [] }
+        return items
+    }
+
+    private static func save(_ items: [YTTrack], key: String) {
+        if let data = try? JSONEncoder().encode(items) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
     }
 }
 
