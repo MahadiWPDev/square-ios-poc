@@ -127,3 +127,75 @@ Limits and troubleshooting:
 - If the phone's iOS version is newer than the Xcode on the Mac
   supports, update Xcode first; a device build requires a matching
   or newer Xcode.
+
+## Current state (2026-10-27)
+
+- Repository: https://github.com/MahadiWPDev/square-ios-poc
+- Use commit `4e98b45c171eb40f53e276731664e7181fe65ad1` or newer on
+  `main`. CI run 32 (poc-build-32 release) is verified green:
+  simulator build, unit tests (27 passing) and the unsigned generic
+  device build all succeed on this code.
+- The XCFramework for this code is the `SquareCorePOC.xcframework.zip`
+  asset of the newest `poc-build-*` release (poc-build-32 or newer).
+  Unzip it into `SquarePoC/Frameworks/` before opening the project,
+  exactly as described earlier in this guide.
+- Features in this build: local audio player (files and a generated
+  test tone), YouTube tab with official Data API search, official
+  embedded playback, playback queue with auto-advance, Recently
+  Played, Favorites, user playlists, and an LRCLIB lyrics panel.
+- The YouTube Data API key is entered inside the app (YouTube tab)
+  and stored only on the device. Never commit it anywhere.
+
+## Provider findings (why playback works the way it does)
+
+- YouTube, official route (implemented): Data API v3 for search,
+  IFrame embedded player for playback. No direct audio stream, no
+  background playback, provider ads may appear. This is the only
+  YouTube route YouTube permits third-party apps to use.
+- Local audio files (implemented): full native playback with
+  background audio and lock-screen controls, because the files are
+  the user's own. This is where the complete player experience
+  genuinely works.
+- Spotify, official route (not implemented): the iOS SDK remote
+  controls the Spotify app; it needs the Spotify app, a Premium
+  account, and an OAuth client ID, and still provides no audio
+  stream to this app. Not worth adding for this project.
+- No authorized provider offers a free, full mainstream catalog
+  with direct streams, background playback, and no ads to a
+  third-party app. Services that appear to offer that do it by
+  breaking the source service's terms, which this project does
+  not do.
+
+## Physical-device test checklist (run on the Mac day)
+
+Automated CI already covers: compilation for simulator and device,
+all 27 unit tests (search parsing, durations, player state machine,
+queue advance and bounds, recents cap and ordering, favorites,
+playlist CRUD, corrupt-data recovery, LRC parsing and highlight
+timing, Rust version and loudness).
+
+Only a real iPhone can verify the following:
+
+1. Install and first launch; trust the developer profile if asked.
+2. Local player: import an audio file, play it, lock the screen,
+   confirm audio continues; check lock-screen title and the
+   play/pause, next, and previous controls; test the queue.
+3. YouTube tab: paste the API key, search a real song, tap a
+   result, confirm audible playback through the embedded player.
+4. Queue: confirm the next search result starts automatically
+   when a track ends; test the next and previous buttons.
+5. Lyrics: open the lyrics panel on a popular song, confirm
+   lines load and the current line highlights while playing.
+6. Favorites, playlists, Recently Played: favorite a track,
+   create a playlist, add the track, force-quit the app, reopen,
+   confirm everything persisted.
+7. Interruptions: take a call or start a timer during local
+   playback; confirm playback pauses and resumes sensibly.
+8. Network loss: toggle airplane mode during a YouTube search
+   and during local playback; confirm clear errors and that
+   local playback is unaffected.
+9. Background limit (expected, not a bug): lock the screen
+   during YouTube playback; the embedded player pauses, which
+   is YouTube's rule for embedded playback.
+10. Expiry: note the install date; the free Personal Team build
+    stops launching after 7 days and must be Run again from Xcode.
