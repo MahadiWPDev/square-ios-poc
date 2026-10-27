@@ -22,14 +22,47 @@ final class YouTubePlayerController: ObservableObject {
     @Published private(set) var currentTime: Double = 0
     @Published private(set) var duration: Double = 0
     @Published private(set) var track: YTTrack?
+    @Published private(set) var queue: [YTTrack] = []
+    @Published private(set) var queueIndex: Int = -1
 
     weak var webView: WKWebView?
 
+    var canNext: Bool { queueIndex >= 0 && queueIndex + 1 < queue.count }
+    var canPrevious: Bool { queueIndex > 0 }
+
+    /// Starts `track`, remembering the list it came from as the
+    /// playback queue so the player can step and auto-advance
+    /// through it (the embedded player loads one video at a time;
+    /// advancing means loading the next video id, which the IFrame
+    /// API permits).
+    func select(_ track: YTTrack, in queue: [YTTrack]) {
+        self.queue = queue
+        queueIndex = queue.firstIndex(of: track) ?? -1
+        start(track)
+    }
+
     func select(_ track: YTTrack) {
+        select(track, in: [track])
+    }
+
+    private func start(_ track: YTTrack) {
         self.track = track
         state = .loading
         currentTime = 0
         duration = Double(track.durationSeconds ?? 0)
+        YTLibraryStore.recordRecent(track)
+    }
+
+    func next() {
+        guard canNext else { return }
+        queueIndex += 1
+        start(queue[queueIndex])
+    }
+
+    func previous() {
+        guard canPrevious else { return }
+        queueIndex -= 1
+        start(queue[queueIndex])
     }
 
     func play() { webView?.evaluateJavaScript("player && player.playVideo()") }
@@ -50,7 +83,10 @@ final class YouTubePlayerController: ObservableObject {
             case 1: state = .playing
             case 2: state = .paused
             case 3: state = .buffering
-            case 0: state = .ended
+            case 0:
+                // Finished: step to the next queued track when
+                // there is one, otherwise report the end.
+                if canNext { next() } else { state = .ended }
             case 5: if state == .loading { state = .paused }
             default: break
             }
