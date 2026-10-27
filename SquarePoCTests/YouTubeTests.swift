@@ -100,6 +100,68 @@ final class YouTubeTests: XCTestCase {
         XCTAssertEqual(controller.currentTime, 42.5, accuracy: 0.001)
     }
 
+    // MARK: Queue
+
+    private func queueTracks() -> [YTTrack] {
+        (1...3).map { YTTrack(id: "q\($0)", title: "Song \($0)", artist: "Artist", thumbnailURL: nil, durationSeconds: 100) }
+    }
+
+    @MainActor
+    func testQueueAdvancesAutomaticallyWhenTrackEnds() {
+        let controller = YouTubePlayerController()
+        let tracks = queueTracks()
+        controller.select(tracks[0], in: tracks)
+        XCTAssertTrue(controller.canNext)
+        XCTAssertFalse(controller.canPrevious)
+
+        controller.handleStateMessage(NSNumber(value: 0))
+        XCTAssertEqual(controller.track?.id, "q2")
+        XCTAssertEqual(controller.state, .loading)
+
+        controller.handleStateMessage(NSNumber(value: 0))
+        XCTAssertEqual(controller.track?.id, "q3")
+
+        controller.handleStateMessage(NSNumber(value: 0))
+        XCTAssertEqual(controller.state, .ended)
+        XCTAssertFalse(controller.canNext)
+    }
+
+    @MainActor
+    func testQueueNextAndPreviousRespectBounds() {
+        let controller = YouTubePlayerController()
+        let tracks = queueTracks()
+        controller.select(tracks[1], in: tracks)
+        controller.next()
+        XCTAssertEqual(controller.track?.id, "q3")
+        controller.next()
+        XCTAssertEqual(controller.track?.id, "q3")
+        controller.previous()
+        XCTAssertEqual(controller.track?.id, "q2")
+    }
+
+    // MARK: On-device library store
+
+    func testLibraryStoreRecordsRecentsNewestFirstWithoutDuplicates() {
+        let a = YTTrack(id: "store-a", title: "A", artist: "X", thumbnailURL: nil, durationSeconds: 10)
+        let b = YTTrack(id: "store-b", title: "B", artist: "Y", thumbnailURL: nil, durationSeconds: 20)
+        YTLibraryStore.recordRecent(a)
+        YTLibraryStore.recordRecent(b)
+        YTLibraryStore.recordRecent(a)
+        let recents = YTLibraryStore.recents()
+        XCTAssertEqual(recents.first?.id, "store-a")
+        XCTAssertEqual(recents.filter { $0.id == "store-a" }.count, 1)
+        XCTAssertEqual(recents.filter { $0.id == "store-b" }.count, 1)
+    }
+
+    func testLibraryStoreFavoriteToggle() {
+        let track = YTTrack(id: "store-fav", title: "F", artist: "Z", thumbnailURL: nil, durationSeconds: 30)
+        if YTLibraryStore.isFavorite(track.id) { YTLibraryStore.toggleFavorite(track) }
+        XCTAssertTrue(YTLibraryStore.toggleFavorite(track))
+        XCTAssertTrue(YTLibraryStore.isFavorite(track.id))
+        XCTAssertFalse(YTLibraryStore.toggleFavorite(track))
+        XCTAssertFalse(YTLibraryStore.isFavorite(track.id))
+    }
+
     // MARK: Embed page
 
     func testEmbedPageCarriesVideoIdAndRejectsBadIds() {
