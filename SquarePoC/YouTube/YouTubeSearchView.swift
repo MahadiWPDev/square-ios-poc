@@ -16,6 +16,9 @@ struct YouTubeSearchView: View {
     @State private var seekDraft: Double?
     @State private var recents: [YTTrack] = []
     @State private var favoriteIds: Set<String> = []
+    @State private var playlists: [YTPlaylist] = []
+    @State private var showingNewPlaylist = false
+    @State private var newPlaylistName = ""
     private let service = YouTubeSearchService()
 
     var body: some View {
@@ -30,12 +33,25 @@ struct YouTubeSearchView: View {
             .navigationTitle("YouTube")
             .onAppear(perform: refreshLibrary)
             .onChange(of: controller.track?.id) { _ in refreshLibrary() }
+            .alert("New playlist", isPresented: $showingNewPlaylist) {
+                TextField("Playlist name", text: $newPlaylistName)
+                Button("Create") {
+                    let name = newPlaylistName.trimmingCharacters(in: .whitespaces)
+                    if !name.isEmpty {
+                        YTPlaylistStore.create(name: name)
+                        refreshLibrary()
+                    }
+                    newPlaylistName = ""
+                }
+                Button("Cancel", role: .cancel) { newPlaylistName = "" }
+            }
         }
     }
 
     private func refreshLibrary() {
         recents = YTLibraryStore.recents()
         favoriteIds = Set(YTLibraryStore.favorites().map(\.id))
+        playlists = YTPlaylistStore.all()
     }
 
     // MARK: Player
@@ -85,6 +101,18 @@ struct YouTubeSearchView: View {
                 } label: {
                     Image(systemName: favoriteIds.contains(track.id) ? "heart.fill" : "heart")
                         .foregroundStyle(favoriteIds.contains(track.id) ? .red : .primary)
+                }
+
+                Menu {
+                    ForEach(playlists) { playlist in
+                        Button(playlist.name) {
+                            YTPlaylistStore.add(track: track, toPlaylist: playlist.id)
+                            refreshLibrary()
+                        }
+                    }
+                    Button("New playlist...") { showingNewPlaylist = true }
+                } label: {
+                    Image(systemName: "text.badge.plus")
                 }
 
                 Text(timeText(controller.currentTime))
@@ -157,8 +185,45 @@ struct YouTubeSearchView: View {
             Text("No results for that search.")
                 .foregroundStyle(.secondary)
             Spacer()
-        } else if !hasSearched && results.isEmpty && (!recents.isEmpty || !favoriteIds.isEmpty) {
+        } else if !hasSearched && results.isEmpty && (!recents.isEmpty || !favoriteIds.isEmpty || !playlists.isEmpty) {
             List {
+                Section("Playlists") {
+                    Button {
+                        showingNewPlaylist = true
+                    } label: {
+                        Label("New playlist", systemImage: "plus")
+                    }
+                    ForEach(playlists) { playlist in
+                        Button {
+                            if let first = playlist.tracks.first {
+                                controller.select(first, in: playlist.tracks)
+                            }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(playlist.name)
+                                        .font(.subheadline.bold())
+                                        .foregroundStyle(.primary)
+                                    Text(playlist.tracks.isEmpty ? "Empty" : "\(playlist.tracks.count) track(s)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if !playlist.tracks.isEmpty {
+                                    Image(systemName: "play.circle")
+                                        .foregroundStyle(.tint)
+                                }
+                            }
+                        }
+                        .disabled(playlist.tracks.isEmpty)
+                    }
+                    .onDelete { offsets in
+                        for index in offsets {
+                            YTPlaylistStore.delete(id: playlists[index].id)
+                        }
+                        refreshLibrary()
+                    }
+                }
                 if !recents.isEmpty {
                     Section("Recently played") {
                         ForEach(recents) { track in
